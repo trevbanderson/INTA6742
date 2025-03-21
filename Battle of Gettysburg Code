@@ -1,0 +1,118 @@
+Globals [
+  two-armies ; soldier counting
+]
+
+breed [ ConfederateSoldiers a-ConfederateSoldiers ]
+breed [ ConfederateCannons a-ConfederateCannons ]
+breed [ UnionSoldiers a-UnionSoldiers ]
+breed [ UnionCannons a-UnionCannons ]
+
+
+
+; Setup
+
+turtles-own [
+  damage 
+  origin ; to calculate distances between each Confederates and Union
+]
+
+to setup
+  clear-all
+  import-drawing "test1.png"
+  reset-ticks
+  make-battlefield ; puts soldiers in front of cannons
+  set-distance-from-front ; set a origin location for each soldier
+end
+
+to set-distance-from-front
+  ask turtles [
+    set origin [ xcor ] of self
+  ]
+end
+
+to make-battlefield
+  set-default-shape ConfederateSoldiers "triangle"
+  set-default-shape ConfederateCannons "circle"
+  set-default-shape UnionSoldiers "triangle"
+  set-default-shape UnionCannons "circle"
+  set two-armies turtles with [ breed = "ConfederateSoldiers" or breed = "UnionSoldiers" ]
+  make-ConfederateSoldiers
+  make-ConfederateCannons
+  make-UnionSoldiers
+  make-UnionCannons
+end
+
+to make-ConfederateSoldiers
+  create-ConfederateSoldiers Confederate_Soldiers [
+  setxy (random -10 - 3) (random 16 + -16)
+  set heading 90
+  set color red
+ ]
+end
+
+to make-ConfederateCannons
+  create-ConfederateCannons Confederate_Cannons [
+    setxy -15 (random 10 + random -10)
+    set heading 90
+    set size 2
+    set color red
+  ]
+end
+
+to make-UnionSoldiers
+  create-UnionSoldiers Union_Soldiers [
+    setxy (random 10 + 3) (random 16 + random -16)
+    set heading 270
+    set color blue
+  ]
+end
+
+to make-UnionCannons
+  create-UnionCannons Union_Cannons [
+    setxy 15 (random 10 + random -10)
+    set size 2
+    set heading 270
+    set color blue
+  ]
+end
+
+; Go
+
+to go
+  fight-soldiers
+  declare-winner
+  tick
+end
+
+to fight-soldiers
+  take-damage
+end
+
+to take-damage
+  if ticks >= 4 [
+  every 2 [
+    ask ConfederateSoldiers [
+      set damage (random 50 / abs origin)
+      if damage >= 7 [
+        let die-change random 100
+        if die-change >= 70 [ die ]
+
+    ]
+    ask UnionSoldiers [
+      set damage ( random 50 / abs origin )
+      if damage >= 7 [
+        let die-change random 100
+            if die-change >= 70 [ die ]
+          ]
+         ]
+        ]
+       ]
+      ]
+end
+
+to declare-winner
+  if (count ConfederateSoldiers <= 0) or (count UnionSoldiers <= 0) [
+    ifelse count ConfederateSoldiers < count UnionSoldiers [ user-message (word "The Confederates have won with " count ConfederateSoldiers " left") ]
+    [ user-message (word "The Union have won with " count UnionSoldiers " left")]
+  ]
+end
