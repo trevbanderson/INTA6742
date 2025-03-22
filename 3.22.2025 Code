@@ -121,7 +121,7 @@ to apply-damage
     set damage (random-float 25 / max (list (abs origin) 1))
     if damage >= 5 [
       let dieChance random-float 100
-      if (breed = ConfederateSoldiers and dieChance >= 70) or (breed = UnionSoldiers and dieChance >= 80) [
+      if (breed = ConfederateSoldiers and dieChance >= 70) or (breed = UnionSoldiers and dieChance >= 30) [
         die
       ]
     ]
@@ -139,7 +139,7 @@ end
 
 to declare-winner
   if (count ConfederateSoldiers = 0 or count UnionSoldiers = 0) [
-    ifelse count ConfederateSoldiers < count UnionSoldiers [
+    ifelse count ConfederateSoldiers > count UnionSoldiers [
       user-message (word "The Confederates have won with " count ConfederateSoldiers " remaining!")
     ] [
       user-message (word "The Union have won with " count UnionSoldiers " remaining!")
