@@ -1,0 +1,148 @@
+Globals [
+  two-armies ; soldier counting from both sides
+]
+
+breed [ ConfederateSoldiers a-ConfederateSoldiers ]
+breed [ ConfederateCannons a-ConfederateCannons ]
+breed [ UnionSoldiers a-UnionSoldiers ]
+breed [ UnionCannons a-UnionCannons ]
+
+; Setup
+
+turtles-own [
+  damage
+  origin ; initial x-coordinate to help compute damage
+  formation ;formation group indicator for ConfederateSoldiers (1, 2, or 3)
+]
+
+to setup
+  clear-all
+  import-drawing "test1.png"
+  reset-ticks
+  make-battlefield ; puts soldiers in front of cannons
+  assign-origin ; set a origin location for each soldier
+end
+
+to assign-origin
+  ask turtles [
+    set origin xcor
+  ]
+end
+
+to make-battlefield
+  set-default-shape ConfederateSoldiers "triangle"
+  set-default-shape ConfederateCannons "circle"
+  set-default-shape UnionSoldiers "triangle"
+  set-default-shape UnionCannons "circle"
+
+
+  ;; Create Confederate Soldiers in three groups:
+  ;; Group 1: Fake front attack at Cemetery Ridge (smallest group)
+  create-ConfederateSoldiers 10 [
+    set formation 1
+    setxy (random-float 2 - 6) (random-float 4 - 2)  ; x in [-6, -4], y in [-2,2]
+    set heading 90
+    set color red
+  ]
+
+ ;; Group 2: Supporting cannon fire at South Cemetery Ridge
+  create-ConfederateSoldiers 20 [
+    set formation 2
+    setxy (random-float 2 - 5) (random-float 4 - 6)  ; x in [-5, -3], y in [-6,-2]
+    set heading 90
+    set color red
+  ]
+ 
+   ;; Group 3: Positioned near North Little Round Top for swift attack
+  create-ConfederateSoldiers 30 [
+    set formation 3
+    setxy (random-float 2 - 4) (random-float 2 + 2)  ; x in [-4,-2], y in [2,4]
+    set heading 90
+    set color red
+  ]
+
+;; Create Confederate Cannons
+  create-ConfederateCannons 3 [
+    setxy -7 (random-float 5 )  
+    set heading 90
+    set size 2
+    set color red
+  ]
+  
+  ;; Create Union Soldiers
+  create-UnionSoldiers 100 [
+    setxy (4 + random-float 1) (-10 + random-float 8) 
+    set heading 270
+    set color blue
+  ]
+  
+  ;; Create Union Cannons
+  create-UnionCannons 5 [
+    setxy 10 (-10 + random-float 5) 
+    set heading 230
+    set size 2
+    set color blue
+  ]
+  
+  set two-armies turtles with [ breed = ConfederateSoldiers or breed = UnionSoldiers ]
+  
+end 
+
+; Go
+
+to go
+
+;; When simulation reaches 60 ticks (minutes), trigger Group 3 attack and stop
+  if ticks >= 60 [
+    group-3-attack
+    stop
+  ]
+  
+  ;; Apply damage every 2 ticks after tick 5
+  if ticks >= 5 and ticks mod 2 = 0 [
+    apply-damage
+  ]
+  
+  move-confederates
+  declare-winner
+  tick
+end
+
+to move-confederates
+  ;; Confederate soldiers not in Group 3 move slowly forward (simulate advancing)
+  ask ConfederateSoldiers with [ formation != 3 ] [
+    fd 0.2
+  ]
+end
+
+to apply-damage
+  ask turtles with [ breed = ConfederateSoldiers or breed = UnionSoldiers ] [
+    ;; Use max to avoid division-by-zero (if origin is 0, use 1 instead)
+    set damage (random-float 25 / max (list (abs origin) 1))
+    if damage >= 5 [
+      let dieChance random-float 100
+      if (breed = ConfederateSoldiers and dieChance >= 70) or (breed = UnionSoldiers and dieChance >= 80) [
+        die
+      ]
+    ]
+  ]
+end
+
+to group-3-attack
+  ;; Group 3 (ConfederateSoldiers with formation = 3) execute a swift attack:
+  ask ConfederateSoldiers with [ formation = 3 ] [
+    set heading 90
+    fd 3  ;; move forward rapidly (5 units)
+  ]
+  user-message "Group 3 has launched their attack!"
+end
+
+to declare-winner
+  if (count ConfederateSoldiers = 0 or count UnionSoldiers = 0) [
+    ifelse count ConfederateSoldiers < count UnionSoldiers [
+      user-message (word "The Confederates have won with " count ConfederateSoldiers " remaining!")
+    ] [
+      user-message (word "The Union have won with " count UnionSoldiers " remaining!")
+    ]
+  ]
+end
